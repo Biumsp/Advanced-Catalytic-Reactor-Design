@@ -1,3 +1,3 @@
 # Functions Toolbox 
 
-Collection of useful functions often called from the `../solvers` or from the `../practicals` 
+Collection of functions often called from the `../solvers` or from the `../practicals` 
