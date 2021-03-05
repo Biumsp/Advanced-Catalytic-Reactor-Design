@@ -1,0 +1,29 @@
+% Solver for 1D isothermal and isobaric dispersion PFR
+% 
+% Solves the governing eqautions for any kinetic mechanism
+% with any number of species.
+% Can be used to observe the temporal evolution of the system 
+% or to analyze the Steady-State solution.
+% 
+% Numerical detailes:
+% - Finite Volumes domain discretization
+% - Central Differencing Scheme for spatial discretization
+% - Backward Differencing Scheme for time discretization
+%
+% -------------------------------------------------------------------------
+
+function C = dispersion_pfr(opt, tspan)
+
+    if ~exist('opt', 'var')
+        opt = struct;       % Define the options structure
+    end
+    
+    if ~exist('opt', 'var')
+        opt = struct;       % Define the options structure
+    end
+
+
+
+
+end
+
