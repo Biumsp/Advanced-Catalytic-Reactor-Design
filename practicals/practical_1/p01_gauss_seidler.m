@@ -52,12 +52,12 @@ b(1) = Cin;
 % First-Guess-Solution
 FGS = linspace(Cin, 1, Np)';
 
-% Find a solution using the Gauss-Seidler method with vector algebra
+% Find a solution using the Jacobi method with vector algebra
 tic
 C = gauss_seidler(A, b, FGS, 1e-5, 250e3, 1.9, 0);
 toc
 
-% Find a solution using the Gauss-Seidler method with for loops
+% Find a solution using the Jacobi method with for loops
 tic
 C = gauss_seidler(A, b, FGS, 1e-5, 250e3, 1.9, 0, 1);
 toc

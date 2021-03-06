@@ -1,5 +1,5 @@
-function yy = jacobi(A, b, FGS, abs_tol, maxiter, SOR, show_error, for_loops)
-    % Solves a linear system using the Jacobi method
+function yy = gauss_seidler(A, b, FGS, abs_tol, maxiter, SOR, show_error, for_loops)
+    % Solves a linear system using the Gauss-Seidler method
     % with Successive-Over-Relaxation
     %
     % Arguments:

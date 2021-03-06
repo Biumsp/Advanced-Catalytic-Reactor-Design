@@ -21,7 +21,7 @@ function C = dispersion_pfr(opt, tspan)
     end
     
     if ~exist('dt', 'var')
-        dt = min();        % Define the integration time step
+        dt = 1e-1;          % Define the integration time step
     end
     
     if ~exist('tspan', 'var')
