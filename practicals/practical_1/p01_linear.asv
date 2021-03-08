@@ -5,7 +5,8 @@
 
 % Solution of a dispersion PFR with linear kinetic mechanisms and no 
 % change of moles. 
-% Finite-Difference scheme (with constant step-size).
+% Finite-Difference differentiation scheme (with constant step-size).
+% CDS for internal points.
 % Performance comparison between different linear systems solvers.
 
 close all
@@ -36,13 +37,12 @@ Pe = L*v./Di;              % Peclét material number [-]
 Cin = 10;          
   
 % Kinetic constants  
-k  = 20;        
+k  = 0.1;        
 
 % =========================================================================
 % Discretization
 
-dy = 0.01;
-y = 0:dy:1;
+y = 0:0.01:1;
 
 Np = length(y);
 
@@ -56,14 +56,14 @@ Np = length(y);
 A = zeros(Np);
 b = zeros(Np, 1);
 
-A(1, 1) = 1 + 1/Pe/dy;
-A(1, 2) =   - 1/Pe/dy;
+A(1, 1) = 1 + 1/Pe/(y(2) - y(1));
+A(1, 2) = - 1/Pe/(y(2) - y(1));
 
 for i = 2:Np-1
     
-    A(i, i-1) =   1/Pe/dy^2;
-    A(i, i)   = - L/v*k - 2/Pe/dy^2 - 1/Pe/dy;
-    A(i, i+1) =   1/Pe/dy + 1/Pe/dy^2;
+    A(i, i-1) = 2/Pe/dy^2 + (y(i-1) - y(i))^2);
+    A(i, i)   = - L/v*k - 4/Pe/((y(i+1) - y(i))^2 + (y(i-1) - y(i))^2) - 1/Pe/(y(i+1) - y(i));
+    A(i, i+1) = 1/Pe/(y(i+1) - y(i)) + 2/Pe/((y(i+1) - y(i))^2 + (y(i-1) - y(i))^2);
     
 end
 

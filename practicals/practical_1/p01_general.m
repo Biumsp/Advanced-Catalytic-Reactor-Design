@@ -5,7 +5,8 @@
 
 % Solution of a dispersion PFR with linear kinetic mechanisms and no 
 % change of moles. 
-% Finite-Difference scheme (with constant step-size).
+% Finite-Difference differentiation scheme (with variable step-size).
+% CDS for internal points.
 % Performance comparison between different linear systems solvers.
 
 close all
@@ -28,23 +29,38 @@ v  = 1;                 % Velocity [m/s]
 % =========================================================================
 % Properties
 
-% Dispersion coefficients [m^2/s]
-Di = 1e-5; 
+ % Dispersion coefficients [m^2/s]
+Di = [1e-5, 1e-5, 1e-5]'; 
 Pe = L*v./Di;              % Peclét material number [-]
 
 % Concentration of the feed (not at the inlet) [mol/m^3]
-Cin = 10;          
+Cin = [10, 0, 0];          
+
+% =========================================================================
+% Mechanism 
+
+% Stoichiometric Coefficients matrix 
+SC = [-1,  1, 0;
+       0, -1, 1]';       
+   
+% Reaction Orders matrix
+RO = [1, 0, 0;
+      0, 1, 0]';         
   
 % Kinetic constants  
-k  = 20;        
+k  = [0.1, 0.1];        
 
 % =========================================================================
 % Discretization
 
-dy = 0.01;
-y = 0:dy:1;
+y = 0:0.01:1;
+y = y.^2;
+
+d = [0 , y(2:end)-y(1:end-1)];
+g = @(n, m) d(n)^2 + d(n)*d(m);
 
 Np = length(y);
+[Ns, Nr] = size(SC);
 
 % -------------------------------------------------------------------------
 % Solution
@@ -53,24 +69,45 @@ Np = length(y);
 % =========================================================================
 % Definition of the system
 
-A = zeros(Np);
-b = zeros(Np, 1);
+A = zeros(Np*Ns);
+b = zeros(Np*Ns, 1);
 
-A(1, 1) = 1 + 1/Pe/dy;
-A(1, 2) =   - 1/Pe/dy;
+r = zeros(1, Nr);
 
-for i = 2:Np-1
-    
-    A(i, i-1) =   1/Pe/dy^2;
-    A(i, i)   = - L/v*k - 2/Pe/dy^2 - 1/Pe/dy;
-    A(i, i+1) =   1/Pe/dy + 1/Pe/dy^2;
-    
+for kk = 1:Np
+    for uu = 1:Ns
+        
+        ii = (kk - 1)*Ns + uu;
+        
+        % Boundary points
+        if kk == 1
+            
+            A(ii, ii)    =   1/Pe(uu)/d(kk+1) + 1;
+            A(ii, ii+Ns) = - 1/Pe(uu)/d(kk+1);
+            
+            b(ii) = Cin(uu);
+ 
+            continue
+        elseif kk == Np
+            
+            A(ii, ii-Ns) =   1;
+            A(ii, ii)   =  -1;
+            
+            break
+        end
+        disp(kk)
+        % Central points
+        A(ii, ii-Ns) =  d(kk+1)/g(kk, kk+1) + 2/Pe(uu)/g(kk, kk+1);
+        A(ii, ii)    =  1/d(kk+1) - g(kk+1, kk)/g(kk, kk+1)/d(kk+1)...
+                        - 2/Pe(uu)/g(kk, kk+1)*(1 + d(kk)/d(kk+1));
+        A(ii, ii+Ns) =  2*d(kk)/Pe(uu)/d(kk+1) - 1/d(kk+1) + d(kk)/g(kk, kk+1);
+        
+        for mm = 1:Ns
+            A(ii, (kk - 1)*Ns + mm) =  L/v*SC(uu, :)*(k'.*RO(mm, :)');
+        end
+        
+    end
 end
-
-A(Np, Np-1) = -1;
-A(Np, Np)   =  1;
-
-b(1) = Cin;
 
 % =========================================================================
 % Backslash
@@ -84,8 +121,14 @@ fprintf('Method: Backslash, time = %f\n', t_out-t_in);
 % =========================================================================
 % Gauss-Seidler (vector algebra)
 
-% First-Guess-Solution
-FGS = linspace(Cin, 1, Np)';
+FGS = zeros(Np*Ns);
+for ii = 1:Np
+    for jj = 1:Ns
+        kk = (ii-1)*Ns + jj;
+        FGS(kk) = Cin(jj);
+    end
+end
+
 
 t_in = cputime;
 C = gauss_seidler(A, b, FGS, 1e-5, 250e3, 1.8, 0, 1);
@@ -115,8 +158,17 @@ fprintf('Method: Bicgstabl, time = %f\n', t_out-t_in);
 % Graphical-Post-Processing
 % -------------------------------------------------------------------------
 
+for ii = 1:Np
+    for jj = 1:Ns
+        
+        kk = (ii -1)*Ns + jj;
+        CC(ii, jj) = C(kk);
+        
+    end
+end
+
 figure
-plot(y, C, '-o')
+plot(y, CC, '-o')
 title('C vs y')
 xlabel('y [-]')
-ylabel('C [mol/m^3]')
+ylabel('C [au ]')
